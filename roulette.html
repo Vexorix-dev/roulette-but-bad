@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complex Roulette Game with Ball</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        #roulette-container { position: relative; display: inline-block; }
+        #roulette-wheel { width: 300px; height: 300px; border: 16px solid #333; border-radius: 50%; margin: 20px auto; position: relative; overflow: hidden; }
+        .number { position: absolute; font-size: 20px; width: 30px; height: 30px; line-height: 30px; text-align: center; top: 50%; left: 50%; transform-origin: 0 -130px; }
+        .ball { width: 20px; height: 20px; background: white; border: 4px solid black; border-radius: 50%; position: absolute; top: 60px; left: 140px; transition: transform 4s ease-out; }
+        button { padding: 10px 20px; font-size: 16px; margin: 5px; }
+        input { padding: 5px; margin-right: 10px; }
+    </style>
+</head>
+<body>
+
+<h1>Complex Roulette Game</h1>
+<div id="roulette-container">
+    <div id="roulette-wheel"></div>
+    <div class="ball" id="roulette-ball"></div>
+</div>
+<input type="text" id="bet" placeholder="Bet Amount" />
+<select id="betType">
+    <option value="red">Red</option>
+    <option value="black">Black</option>
+    <option value="green">Green (0)</option>
+    <option value="number">Number (0-36)</option>
+</select>
+<input type="number" id="betNumber" placeholder="Number (0-36)" min="0" max="36" style="display:none;" />
+<button onclick="placeBet()">Place Bet</button>
+<button onclick="spinWheel()">Spin the Wheel!</button>
+<p id="result"></p>
+
+<script>
+    let currentBet = { amount: 0, type: '', number: null };
+    const rouletteNumbers = [
+        { number: 0, color: 'green' },
+        { number: 1, color: 'red' }, { number: 2, color: 'black' }, { number: 3, color: 'red' },
+        { number: 4, color: 'black' }, { number: 5, color: 'red' }, { number: 6, color: 'black' },
+        { number: 7, color: 'red' }, { number: 8, color: 'black' }, { number: 9, color: 'red' },
+        { number: 10, color: 'black' }, { number: 11, color: 'red' }, { number: 12, color: 'black' },
+        { number: 13, color: 'red' }, { number: 14, color: 'black' }, { number: 15, color: 'red' },
+        { number: 16, color: 'black' }, { number: 17, color: 'red' }, { number: 18, color: 'black' },
+        { number: 19, color: 'red' }, { number: 20, color: 'black' }, { number: 21, color: 'red' },
+        { number: 22, color: 'black' }, { number: 23, color: 'red' }, { number: 24, color: 'black' },
+        { number: 25, color: 'red' }, { number: 26, color: 'black' }, { number: 27, color: 'red' },
+        { number: 28, color: 'black' }, { number: 29, color: 'red' }, { number: 30, color: 'black' },
+        { number: 31, color: 'red' }, { number: 32, color: 'black' }, { number: 33, color: 'red' },
+        { number: 34, color: 'black' }, { number: 35, color: 'red' }, { number: 36, color: 'black' }
+    ];
+
+    function createWheel() {
+        const wheel = document.getElementById('roulette-wheel');
+        rouletteNumbers.forEach((item, index) => {
+            const angle = (index * 360) / rouletteNumbers.length;
+            const numberDiv = document.createElement('div');
+            numberDiv.className = 'number';
+            numberDiv.style.color = item.color;
+            numberDiv.style.transform = `rotate(${angle}deg) translateY(-130px) rotate(-${angle}deg)`;
+            numberDiv.innerHTML = item.number;
+            wheel.appendChild(numberDiv);
+        });
+    }
+
+    createWheel();
+
+    document.getElementById('betType').addEventListener('change', function() {
+        document.getElementById('betNumber').style.display = this.value === 'number' ? 'inline' : 'none';
+    });
+
+    function placeBet() {
+        const betAmount = parseInt(document.getElementById('bet').value);
+        const betType = document.getElementById('betType').value;
+        const betNumber = parseInt(document.getElementById('betNumber').value);
+        if (isNaN(betAmount) || betAmount <= 0) {
+            alert('Please enter a valid bet amount.');
+            return;
+        }
+        currentBet = { amount: betAmount, type: betType, number: betNumber };
+        alert(`Bet placed: ${betAmount} on ${betType}${betType === 'number' ? ` ${betNumber}` : ''}`);
+    }
+
+    function spinWheel() {
+        if (currentBet.amount <= 0) {
+            alert('Please place a bet before spinning the wheel.');
+            return;
+        }
+
+        const degrees = Math.floor(Math.random() * 360);
+        const ball = document.getElementById('roulette-ball');
+        ball.style.transition = 'transform 4s ease-out';
+        ball.style.transform = `translateY(220px) rotate(${degrees}deg)`; // Ball movement
+
+        document.getElementById('roulette-wheel').style.transition = 'transform 4s ease-out';
+        document.getElementById('roulette-wheel').style.transform = `rotate(${degrees}deg)`;
+
+        const resultIndex = (degrees % 360) / (360 / rouletteNumbers.length);
+        const result = rouletteNumbers[Math.floor(resultIndex)];
+
+        setTimeout(() => {
+            ball.style.transform = `translateY(0) rotate(${degrees}deg)`; // Reset ball position after spin
+            let payout = 0;
+            let resultText = `You landed on: ${result.number} (${result.color})`;
+            if (currentBet.type === 'number' && currentBet.number === result.number) {
+                payout = currentBet.amount * 35; // 35:1 payout for number
+                resultText += ` - You win ${payout}!`;
+            } else if (currentBet.type === result.color) {
+                payout = currentBet.amount * 2; // 1:1 payout for color
+                resultText += ` - You win ${payout}!`;
+            } else {
+                resultText += " - You lose your bet.";
+            }
+            document.getElementById('result').innerHTML = resultText; 
+        }, 4000);
+    }
+</script>
+
+</body>
+</html>
